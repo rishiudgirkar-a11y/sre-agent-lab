@@ -2,7 +2,7 @@ name: Incident Feedback Loop
 
 on:
   issues:
-    types: write
+    types: [labeled]
 
 jobs:
   feedback:
