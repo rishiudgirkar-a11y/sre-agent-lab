@@ -8,6 +8,7 @@ on:
 jobs:
   monitor:
     runs-on: ubuntu-latest
+
     permissions:
       issues: write
       contents: read
@@ -18,10 +19,10 @@ jobs:
         run: |
           ERROR_RATE=15
           echo "Error Rate is $ERROR_RATE"
-          echo "error_rate=$ERROR_RATE" >> "$GITHUB_OUTPUT"
+          echo "error_rate=$ERROR_RATE" >> $GITHUB_OUTPUT
 
       - name: Detect Incident + AI Analysis
-        if: steps.metrics.outputs.error_rate > 10
+        if: ${{ steps.metrics.outputs.error_rate > 10 }}
         uses: actions/github-script@v7
         with:
           script: |
@@ -35,4 +36,18 @@ jobs:
               title: `[INCIDENT] High error rate detected: ${errorRate}`,
               body: `Error rate exceeded threshold.\n\nDetected at: ${timestamp}`,
               labels: ['incident', 'sre', 'automated']
+            });
+
+            // Add AI comment
+            const analysis = `### AI Analysis
+            - Possible cause: Memory leak or recent deployment issue
+            - Immediate action: Restart service
+            - Investigation: Check logs and recent commits
+            - Prevention: Add monitoring and alerts`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.data.number,
+              body: analysis
             });
